@@ -8,9 +8,6 @@ import (
 	"log"
 	"net/url"
 	"os"
-	"strings"
-
-	"github.com/jmoiron/jsonq"
 	"strconv"
 
 	"github.com/gorilla/websocket"
@@ -19,9 +16,8 @@ import (
 type (
 	Player struct {
 		PlayerName string `json:"player_name"`
-		//Server  int    `json:"server"`
-		Channel string `json:"channel"` //todo: siivoa json-formaatti
-		Place   int    `json:"place"`
+		Channel    string `json:"channel"` //todo: siivoa json-formaatti
+		Place      int    `json:"place"`
 	}
 
 	CameraServer struct {
@@ -30,7 +26,7 @@ type (
 	}
 
 	ConfigFile struct {
-		CameraServers []CameraServer    `json:"cameraServers"`
+		CameraServers []CameraServer    `json:"camera_servers"`
 		Players       map[string]Player `json:"players"`
 		Cameras       map[string]string `json:"cameras"`
 		//todo: pkm listen port
@@ -54,12 +50,9 @@ type (
 
 var (
 	obs            []obsConfig
-	commands       map[string]string
 	Players        map[string]Player
 	Cameras        map[string]string
-	CameraServers  map[string]string
 	previousPlayer string
-	previousInput  int
 	messageID      int
 	testOnly       bool
 )
@@ -123,27 +116,6 @@ func Configure() {
 	log.Printf("load valmis")
 }
 
-// todo: tekeekö tämä mitään?
-func PopulatePlayerConf(jsonData string) {
-	plrs := make(map[string]Player)
-
-	// Jos player conffi on tyhjä, ota allplayers tieto pelidatasta ja laita niistä SteamID:t talteen
-	testing := map[string]interface{}{}
-	dec := json.NewDecoder(strings.NewReader(jsonData))
-	dec.Decode(&testing)
-	jq := jsonq.NewQuery(testing)
-	obj, _ := jq.Object("allplayers")
-
-	var n int = 1
-	for k := range obj {
-		plr := Player{}
-		//plr.Server = Players[strconv.Itoa(n)].Server
-		plr.Channel = Players[strconv.Itoa(n)].Channel
-		plrs[k] = plr
-		n++
-	}
-}
-
 // SwitchPlayer käskee tunnettuja palvelimia vaihtamaan inputtia, samat komennot jokaiselle.
 //Inputtien nimet pitää olla OBS:ssä uniikkeja jotta vain oikea kone reagoi (muut antavat virheen josta ei välitetä)
 
@@ -187,7 +159,6 @@ func SwitchPlayer(input int64, currentPlayer string) {
 
 func sendCommand(input string, vis bool, server int) {
 
-
 	messageID++
 
 	//log.Println("foo")
@@ -209,7 +180,6 @@ func sendCommand(input string, vis bool, server int) {
 		//log.Println(obs[server].conn)
 		return
 	}
-
 
 	err := obs[server].conn.WriteMessage(websocket.TextMessage, jsonToSend)
 	if err != nil {
